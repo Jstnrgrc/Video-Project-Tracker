@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id            Int           @id @default(autoincrement())
+  clientId      Int?
+  title         String
+  clientName    String
+  status        String        @default("PENDING")
+  projectLink   String?
+  dateCreated   DateTime
+  deadline      DateTime?
+  notes         String?
+  priority      String        @default("MEDIUM")
+  paymentStatus String        @default("UNPAID")
+  rate          Float         @default(0)
+  currency      String        @default("PHP")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  client        Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([dateCreated])
+  @@index([status])
+  @@index([clientName])
+  @@index([paymentStatus])
+  @@index([currency])
+}
+
+model Client {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  email     String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  password     String
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
