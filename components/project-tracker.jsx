@@ -225,8 +225,8 @@ export function ProjectTracker() {
   }
 
   async function saveProject(payload) {
-    const url = editingProject ? `/api/projects/${editingProject.id}` : "/api/projects";
-    const method = editingProject ? "PATCH" : "POST";
+    const url = editingProject?.id ? `/api/projects/${editingProject.id}` : "/api/projects";
+    const method = editingProject?.id ? "PATCH" : "POST";
     const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (response.ok) {
       await loadData();
@@ -386,7 +386,40 @@ function ClientDrawer({ client, projects, open, onOpenChange, onAddProject, onBa
   const total = sumByCurrency(projects);
   const paid = sumByCurrency(projects, (project) => project.paymentStatus === "PAID");
   const unpaid = sumByCurrency(projects, (project) => project.paymentStatus !== "PAID");
-  return <Sheet open={open} onOpenChange={onOpenChange}><SheetContent><SheetHeader><SheetTitle>{client?.name}</SheetTitle><SheetDescription>Client → Projects → Monthly Billing / Invoice</SheetDescription></SheetHeader>{client && <div className="mt-6 grid gap-5"><div className="grid gap-3 sm:grid-cols-3"><Summary label="Projects" value={projects.length} /><Summary label="Paid" value={`${formatCurrency(paid.PHP, "PHP")} / ${formatCurrency(paid.USD, "USD")}`} /><Summary label="Unpaid" value={`${formatCurrency(unpaid.PHP, "PHP")} / ${formatCurrency(unpaid.USD, "USD")}`} /></div><div className="grid gap-3 sm:grid-cols-3"><Summary label="Pending" value={projects.filter((project) => project.status === "PENDING").length} /><Summary label="Doing" value={projects.filter((project) => project.status === "DOING").length} /><Summary label="Completed" value={projects.filter((project) => project.status === "COMPLETED").length} /></div><div className="rounded-lg border p-4"><p className="text-sm font-semibold">Totals</p><p className="mt-2 text-sm text-muted-foreground">PHP {formatCurrency(total.PHP, "PHP")} · USD {formatCurrency(total.USD, "USD")}</p></div><div className="flex flex-wrap gap-2"><Button onClick={() => onAddProject(client)}><Plus className="size-4" />Add Project</Button><Button variant="outline" onClick={() => onBatch(client)}>Batch Add Projects</Button><Button variant="outline" onClick={() => onInvoice(client)}><FileText className="size-4" />Generate Client Invoice</Button></div><div>{renderRows(projects)}</div></div>}</SheetContent></Sheet>;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col">
+        <DialogHeader>
+          <DialogTitle>{client?.name}</DialogTitle>
+          <DialogDescription>Client overview — projects, billing, and invoices.</DialogDescription>
+        </DialogHeader>
+        {client && (
+          <div className="grid gap-5 overflow-y-auto pr-1">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Summary label="Projects" value={projects.length} />
+              <Summary label="Paid" value={`${formatCurrency(paid.PHP, "PHP")} / ${formatCurrency(paid.USD, "USD")}`} />
+              <Summary label="Unpaid" value={`${formatCurrency(unpaid.PHP, "PHP")} / ${formatCurrency(unpaid.USD, "USD")}`} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Summary label="Pending" value={projects.filter((project) => project.status === "PENDING").length} />
+              <Summary label="Doing" value={projects.filter((project) => project.status === "DOING").length} />
+              <Summary label="Completed" value={projects.filter((project) => project.status === "COMPLETED").length} />
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-sm font-semibold">Totals</p>
+              <p className="mt-2 text-sm text-muted-foreground">PHP {formatCurrency(total.PHP, "PHP")} · USD {formatCurrency(total.USD, "USD")}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => onAddProject(client)}><Plus className="size-4" />Add Project</Button>
+              <Button variant="outline" onClick={() => onBatch(client)}>Batch Add Projects</Button>
+              <Button variant="outline" onClick={() => onInvoice(client)}><FileText className="size-4" />Generate Client Invoice</Button>
+            </div>
+            <div>{renderRows(projects)}</div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function Summary({ label, value }) {
